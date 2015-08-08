@@ -41,6 +41,7 @@ class WeightResponse(object):
     self.responseTuple = responseTuple
     self.weight = getWeightValue(self.responseTuple)
     self.units  = getUnits(self.responseTuple)
+    self.author = ""
   def weight(self):
     return self.weight
   def units(self):
@@ -50,6 +51,15 @@ class WeightResponse(object):
       return self.weight * 2.2
     else:
       return self.weight
+  def pretty_print(self):
+    weightString = "%s weighs %f pounds" % (self.author, self.weight_in_pounds())
+    if not self.is_this_reasonable():
+      weightString = weightString + " ...This seems unreasonable"
+    print weightString
+  def is_this_reasonable(self):
+    if self.weight_in_pounds() < 80 or self.weight_in_pounds() > 600:
+      return False
+    return True
 
 
 def extract(list):
@@ -64,16 +74,22 @@ def weightFromText(text):
   return regex.findall(text)
 
 def main():
+  bad_entries = 0
   for comment in post.comments[1:]:
-    print comment.author
     name = comment.author
-    weightResponse = WeightResponse(weightFromText(comment.body)[0])
-    print weightResponse.weight_in_pounds()
+    try:
+      weightResponse = WeightResponse(weightFromText(comment.body)[0])
+      weightResponse.author = name 
+      weightResponse.pretty_print()
+    except Exception, e:
+      bad_entries = bad_entries + 1
+
+  print "There were %d bad entries" % (bad_entries)
 
 def getUnits(l):
-  if l[2][0] == 'k':
+  if l[2][0].lower() == 'k':
     return KILOGRAMS
-  elif l[2][0] == 'l' or 'p':
+  elif l[2][0].lower() == 'l' or 'p':
     return POUNDS
 
 def getWeightValue(l):
