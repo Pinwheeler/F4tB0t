@@ -1,0 +1,10 @@
+# .pairs - configuration for 'git pair'
+pairs:
+  # <initials>: <Firstname> <Lastname>[; <email-id>]
+  ad: Anthony Dreessen; anthonydreessen
+  nf: Nate Faubion; nafaubion
+email:
+  prefix: pair
+  domain: gmail.com
+  # no_solo_prefix: true
+#global: true

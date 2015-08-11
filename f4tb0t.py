@@ -3,13 +3,12 @@ import pdb
 import re
 import os
 import csv
+import pdb
 
 from bot_config import *
 from IPython import embed
 from nltk import *
-
-KILOGRAMS = "kilograms"
-POUNDS = "pounds"
+from weight_response import WeightResponse
 
 
 if not os.path.isfile('bot_config.py'):
@@ -37,92 +36,58 @@ post = r.get_submission(POST_ENDPOINT)
 
 print post
 
-class WeightResponse(object):
-  """WeightResponse takes a list of tuples and packages it nicely into an object"""
-  def __init__(self, responseTuple):
-    super(WeightResponse, self).__init__()
-    self.responseTuple = responseTuple
-    self.weight = getWeightValue(self.responseTuple)
-    self.units  = getUnits(self.responseTuple)
-    self.author = ""
-    self.l = []
-  def weight(self):
-    return self.weight
-  def units(self):
-    return self.units
-  def weight_in_pounds(self):
-    if self.units == KILOGRAMS:
-      return int(self.weight * 2.2)
-    else:
-      return int(self.weight)
-  def pretty_print(self):
-    if self.is_this_reasonable():
-      weightString = "%s weighs %d pounds" % (self.author, self.weight_in_pounds())
-      self.l.append(self.weight_in_pounds())
-      print weightString
-    else:
-      pass
-    
-  def is_this_reasonable(self):
-    if self.weight_in_pounds() < 80 or self.weight_in_pounds() > 600:
-      return False
-    return True
-
-"""def extract(list):
-  items = []
-  while list[list.count] is not '':
-    items.append(list.pop())
-
-  return items"""
-
 def weightFromText(text):
   regex = re.compile('(([0-9]+) ?([lpkLPK][\w]+))')
   return regex.findall(text)
 
 def main():
-  tot_entries = 0
+  good_entries = 0
   bad_entries = 0
-  rawlist = []  
+  rawlist = [] 
+  namelist = []
   for comment in post.comments[1:]:
     name = comment.author
     try:
       weightResponse = WeightResponse(weightFromText(comment.body)[0])
       weightResponse.author = name 
-      rawlist.append(weightResponse.weight_in_pounds())
       weightResponse.pretty_print()
-      tot_entries = tot_entries + 1      
-
+      good_entries = good_entries + 1 
+      if weightResponse.is_this_reasonable():
+        rawlist.append(weightResponse.weight_in_pounds()) 
+        namelist.append(weightResponse.author)
+      else:
+        pass
+           
     except Exception, e:
       bad_entries = bad_entries + 1
-
-  datalist = recursive_remover(rawlist)
-  print "The average weight of commenters is %d pounds" % int(mean(datalist))
-  totEnt = tot_entries + bad_entries
+    
+  print namelist
+  print "The average weight of commenters is %d pounds" % int(mean(rawlist))
+  totEnt = good_entries + bad_entries
   print "There were %d entries of %d total without data" % (bad_entries, totEnt)
+  for name in namelist:
+    try:
+      user = r.get_redditor(name)
+      print subredditsForUser(user)
+    except Exception, e:
+      pass
 
-def getUnits(l):
-  if l[2][0].lower() == 'k':
-    return KILOGRAMS
-  elif l[2][0].lower() == 'l' or 'p':
-    return POUNDS
+def commentsForUser(user):
+  return user.get_comments()
 
-def recursive_remover(list):
-  if list == []:
-    return []
-  else:
-    if list[0] < 80:
-      return recursive_remover(list[1:])
-    else:
-      return [list[0]] + recursive_remover(list[1:])
+def subredditForComment(comment):
+  return comment.subreddit.display_name
 
+def subredditsForUser(user):
+  subreddits = []
+  for comment in commentsForUser(user):
+    subreddits.append(subredditForComment(comment))
+  return subreddits
 
 def mean(list):
   summ = 0
   for i in list:
     summ = summ + i
   return float(summ)/len(list)
-
-def getWeightValue(l):
-  return float(l[1])
 
 main()
