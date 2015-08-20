@@ -1,0 +1,3 @@
+Get the pretty print output in a .csv don't worry about the pipes (|)
+refactor the weight_response.name business
+get rid of the blank username entries

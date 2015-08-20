@@ -3,6 +3,7 @@ pairs:
   # <initials>: <Firstname> <Lastname>[; <email-id>]
   ad: Anthony Dreessen; anthonydreessen
   nf: Nate Faubion; nafaubion
+  rb: Raleigh Bean; svenlayer
 email:
   prefix: pair
   domain: gmail.com
